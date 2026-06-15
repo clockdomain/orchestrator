@@ -1,44 +1,91 @@
+/// Platform firmware events triggering state transitions.
+///
+/// Events represent significant occurrences in the firmware lifecycle:
+/// initialization, verification results, recovery outcomes, updates, and
+/// runtime monitoring events. Each event may carry contextual data via
+/// `EventData` for policy decisions and region selection.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Event {
     // Boot & Init
+    /// Initialize state machine from `Boot` to `Init`
     StartStateMachine,
+    /// Initialization complete; proceed to `Tmin1`
     InitDone,
+    /// Secondary HROT firmware has booted; proceed to ROT recovery flow
     InitRotSecondaryBooted,
 
     // Verification
+    /// All firmware images verified successfully; proceed to next phase
     VerifyDone,
+    /// Firmware verification failed; may trigger recovery or lockdown
     VerifyFailed,
+    /// Firmware images are unprovisioned; platform needs provisioning
     VerifyUnprovisioned,
 
     // Recovery
+    /// Firmware recovery completed successfully
     RecoveryDone,
+    /// Firmware recovery failed; may escalate to lockdown
     RecoveryFailed,
 
     // Updates
+    /// Firmware update requested via intent or external command
     UpdateRequested,
+    /// Firmware update completed successfully
     UpdateDone,
+    /// Firmware update failed; recovery or rollback may be needed
     UpdateFailed,
+    /// Secondary update requested for dual-region updates
     UpdateIntent2Requested,
 
     // Watchdog & Runtime
+    /// Unexpected reset detected; diagnose and recover
     ResetDetected,
+    /// Watchdog checkpoint reached; normal operation ongoing
     WdtCheckpoint,
+    /// Watchdog timeout; platform may be hung or deadlocked
     WdtTimeout,
+    /// Attestation check failed; security compromise detected
     AttestationFailed,
 
     // Provisioning
+    /// Provisioning command received; enter provisioning flow
     ProvisionCmd,
+    /// Seal firmware after provisioning; finalize security state
     SealFirmware,
+    /// BMC reset command requested; initiate controlled reboot
     BmcResetCommRequested,
 
     // Seamless (optional)
+    /// Seamless PCH update completed without blocking boot
     SeamlessUpdateDone,
+    /// Seamless update failed; may require full update cycle
     SeamlessUpdateFailed,
+    /// Seamless update verification passed
     SeamlessVerifyDone,
+    /// Seamless update verification failed; rollback triggered
     SeamlessVerifyFailed,
 }
 
-/// EventData carries metadata for events: intent, region mask, reset policy, and handled region.
+/// Event data passed with state transitions.
+///
+/// Carries contextual metadata for events:
+/// - `bit8[0]` — Intent flag (0=passive, 1=active update)
+/// - `bit8[1]` — Region mask (selects BMC, PCH, or HROT firmware)
+/// - `bit8[2]` — Reset policy (0=no reset, 1=reset on completion)
+/// - `bit8[3]` — Handled region (records which region was processed)
+/// - `bit32` — Extended 32-bit value for policy-specific data
+///
+/// # Example
+///
+/// ```
+/// use orchestrator::aspeed::EventData;
+///
+/// // Create event data with intent = 1 (active), region = 0x01 (BMC)
+/// let data = EventData::new([1, 0x01, 0, 0], 0);
+/// assert_eq!(data.intent(), 1);
+/// assert_eq!(data.region_mask(), 0x01);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct EventData {
     pub bit8: [u8; 4],
@@ -81,7 +128,16 @@ impl Default for EventData {
     }
 }
 
-/// ActiveObject tracks firmware verification and recovery status via bit flags.
+/// Tracks firmware verification and recovery status via bit flags.
+///
+/// Records the verification and recovery state of firmware images during
+/// the boot flow. Used to determine if recovery is needed or if the system
+/// can proceed to runtime.
+///
+/// Flags:
+/// - Bit 0: Active firmware verified
+/// - Bit 1: Recovery firmware verified
+/// - Bit 2: System in lockdown (fatal error)
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ActiveObject {
     flags: u16,
