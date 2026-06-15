@@ -36,4 +36,49 @@ mod tests {
         sm.set_state(State::FirmwareVerify);
         assert_eq!(sm.current_state(), State::FirmwareVerify);
     }
+
+    #[test]
+    fn test_firmware_verify_verify_failed_goes_to_recovery() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareVerify);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::VerifyFailed, data);
+        assert_eq!(sm.current_state(), State::FirmwareRecovery);
+    }
+
+    #[test]
+    fn test_firmware_recovery_recovery_done_goes_to_verify() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareRecovery);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::RecoveryDone, data);
+        assert_eq!(sm.current_state(), State::FirmwareVerify);
+    }
+
+    #[test]
+    fn test_firmware_recovery_recovery_failed_goes_to_lockdown() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareRecovery);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::RecoveryFailed, data);
+        assert_eq!(sm.current_state(), State::SystemLockdown);
+    }
+
+    #[test]
+    fn test_firmware_verify_update_requested_goes_to_update() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareVerify);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::UpdateRequested, data);
+        assert_eq!(sm.current_state(), State::FirmwareUpdate);
+    }
+
+    #[test]
+    fn test_firmware_update_update_done_goes_to_verify() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareUpdate);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::UpdateDone, data);
+        assert_eq!(sm.current_state(), State::FirmwareVerify);
+    }
 }
