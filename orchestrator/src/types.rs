@@ -79,7 +79,7 @@ pub enum Event {
 /// # Example
 ///
 /// ```
-/// use orchestrator::aspeed::EventData;
+/// use orchestrator::EventData;
 ///
 /// // Create event data with intent = 1 (active), region = 0x01 (BMC)
 /// let data = EventData::new([1, 0x01, 0, 0], 0);

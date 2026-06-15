@@ -1,4 +1,4 @@
-use orchestrator::aspeed::State;
+use orchestrator::State;
 
 #[test]
 fn test_can_create_boot_state() {

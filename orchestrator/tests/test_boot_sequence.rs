@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use orchestrator::aspeed::{StateMachine, Event, EventData, State};
+    use orchestrator::{StateMachine, Event, EventData, State};
 
     #[test]
     fn test_full_boot_sequence_unprovisioned() {

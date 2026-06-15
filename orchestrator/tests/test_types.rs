@@ -1,4 +1,4 @@
-use orchestrator::aspeed::types::{Event, EventData, ActiveObject};
+use orchestrator::types::{Event, EventData, ActiveObject};
 
 #[test]
 fn test_event_enum_has_start_state_machine() {

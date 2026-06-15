@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use orchestrator::aspeed::{Event, EventData, State, StateMachine};
+    use orchestrator::{Event, EventData, State, StateMachine};
 
     #[test]
     fn test_state_machine_initializes_in_boot() {

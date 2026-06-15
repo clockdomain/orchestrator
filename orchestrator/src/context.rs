@@ -1,5 +1,5 @@
-use crate::aspeed::types::{Event, EventData};
-use crate::aspeed::states::State;
+use crate::types::{Event, EventData};
+use crate::states::State;
 
 #[derive(Debug)]
 pub struct StateMachine {

@@ -1,24 +1,58 @@
-pub mod aspeed;
+//! Orchestrator: ASPEED PFR (Platform Firmware Resilience) Hierarchical State Machine
+//!
+//! This crate implements a complete hierarchical state machine for managing
+//! BMC, PCH, and HROT firmware verification, recovery, and update operations
+//! on ASPEED BMC SoCs.
+//!
+//! ## State Hierarchy
+//!
+//! **Top-level states:**
+//! - `Boot` — Initial idle state
+//! - `Init` — System initialization
+//! - `RotRecovery` — HROT firmware recovery
+//! - `Tmin1` — Pre-boot verification/recovery/update
+//! - `Tzero` — Release boot holds, enter runtime
+//! - `SystemReboot` — Force platform reboot
+//!
+//! **Tmin1 children:**
+//! - `FirmwareVerify` — Authenticate all firmware images
+//! - `FirmwareRecovery` — Recover corrupted images
+//! - `FirmwareUpdate` — Perform firmware updates
+//! - `SystemLockdown` — Security lockdown on fatal failures
+//!
+//! **Tzero children:**
+//! - `Unprovisioned` — Unprovisioned platform state
+//! - `Runtime` — Normal operation (monitoring active)
+//! - `SeamlessUpdate` — Non-blocking PCH update
+//! - `SeamlessVerify` — Verify seamless update
+//!
+//! ## Usage
+//!
+//! ```ignore
+//! use orchestrator::{StateMachine, Event, EventData};
+//!
+//! let mut sm = StateMachine::new();
+//! let mut data = EventData::new([1, 0, 0, 0], 0); // intent = 1
+//!
+//! sm.handle_event_with_data(Event::StartStateMachine, data);
+//! ```
+//!
+//! ## Event-Driven Architecture
+//!
+//! Events drive state transitions and carry contextual data via `EventData`:
+//! - Boot & Init: `StartStateMachine`, `InitDone`, `InitRotSecondaryBooted`
+//! - Verification: `VerifyDone`, `VerifyFailed`, `VerifyUnprovisioned`
+//! - Recovery: `RecoveryDone`, `RecoveryFailed`
+//! - Updates: `UpdateRequested`, `UpdateDone`, `UpdateFailed`, `UpdateIntent2Requested`
+//! - Watchdog & Runtime: `ResetDetected`, `WdtCheckpoint`, `WdtTimeout`, `AttestationFailed`
+//! - Provisioning: `ProvisionCmd`, `SealFirmware`, `BmcResetCommRequested`
+//! - Seamless: `SeamlessUpdateDone`, `SeamlessUpdateFailed`, `SeamlessVerifyDone`, `SeamlessVerifyFailed`
 
-pub use aspeed::{Event, EventData, ActiveObject, StateMachine};
+pub mod types;
+pub mod states;
+pub mod handlers;
+pub mod context;
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-
-    #[test]
-    fn test_orchestrator_aspeed_module_exports_event() {
-        use crate::aspeed::Event;
-        let _e = Event::StartStateMachine;
-    }
-}
+pub use types::{Event, EventData, ActiveObject};
+pub use states::State;
+pub use context::StateMachine;

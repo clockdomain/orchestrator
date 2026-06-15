@@ -1,4 +1,4 @@
-use crate::aspeed::types::EventData;
+use crate::types::EventData;
 
 pub trait StateHandler {
     fn on_entry(&mut self, data: &EventData);

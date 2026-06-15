@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use orchestrator::aspeed::{StateMachine, Event};
-    use orchestrator::aspeed::states::State;
+    use orchestrator::{StateMachine, Event};
+    use orchestrator::states::State;
 
     #[test]
     fn test_handler_on_entry_called_when_entering_state() {

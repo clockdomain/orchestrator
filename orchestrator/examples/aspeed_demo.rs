@@ -2,7 +2,7 @@
 //!
 //! Demonstrates boot sequence, verification, recovery, and update flows.
 
-use orchestrator::aspeed::{StateMachine, Event, EventData, State};
+use orchestrator::{StateMachine, Event, EventData, State};
 
 fn main() {
     println!("=== Aspeed PFR State Machine Demo ===\n");
