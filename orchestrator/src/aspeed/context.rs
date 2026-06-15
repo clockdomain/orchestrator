@@ -17,6 +17,10 @@ impl StateMachine {
         self.state
     }
 
+    pub fn set_state(&mut self, new_state: State) {
+        self.state = new_state;
+    }
+
     pub fn handle_event(&mut self, event: Event, _data: EventData) {
         // Simple transition logic for now (will be expanded in Phase 3)
         self.state = match (self.state, event) {
