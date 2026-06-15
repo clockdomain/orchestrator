@@ -4,12 +4,14 @@ use crate::aspeed::states::State;
 #[derive(Debug)]
 pub struct StateMachine {
     state: State,
+    last_event_data: EventData,
 }
 
 impl StateMachine {
     pub fn new() -> Self {
         StateMachine {
             state: State::Boot,
+            last_event_data: EventData::default(),
         }
     }
 
@@ -71,6 +73,15 @@ impl StateMachine {
             _ => self.state,
         };
     }
+
+    pub fn handle_event_with_data(&mut self, event: Event, data: EventData) {
+        self.last_event_data = data;
+        self.handle_event(event, data);
+    }
+
+    pub fn last_event_data(&self) -> EventData {
+        self.last_event_data
+    }
 }
 
 impl Default for StateMachine {
@@ -78,3 +89,4 @@ impl Default for StateMachine {
         Self::new()
     }
 }
+
