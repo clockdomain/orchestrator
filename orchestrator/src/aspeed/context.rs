@@ -1,4 +1,35 @@
-// State machine context for Aspeed PFR
+use crate::aspeed::types::{Event, EventData};
+use crate::aspeed::states::State;
 
-/// StateMachine is a forward declaration for the Aspeed PFR state machine.
-pub struct StateMachine;
+#[derive(Debug)]
+pub struct StateMachine {
+    state: State,
+}
+
+impl StateMachine {
+    pub fn new() -> Self {
+        StateMachine {
+            state: State::Boot,
+        }
+    }
+
+    pub fn current_state(&self) -> State {
+        self.state
+    }
+
+    pub fn handle_event(&mut self, event: Event, _data: EventData) {
+        // Simple transition logic for now (will be expanded in Phase 3)
+        self.state = match (self.state, event) {
+            (State::Boot, Event::StartStateMachine) => State::Init,
+            (State::Init, Event::InitDone) => State::FirmwareVerify,
+            (State::Tmin1, Event::VerifyDone) => State::Tzero,
+            _ => self.state,
+        };
+    }
+}
+
+impl Default for StateMachine {
+    fn default() -> Self {
+        Self::new()
+    }
+}
