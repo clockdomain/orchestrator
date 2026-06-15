@@ -22,7 +22,7 @@ impl StateMachine {
     }
 
     pub fn handle_event(&mut self, event: Event, _data: EventData) {
-        // Full transition logic for Boot, Init, TMIN1, and RotRecovery states
+        // Full transition logic for Boot, Init, TMIN1, TZERO, and RotRecovery states
         self.state = match (self.state, event) {
             // Boot & Init
             (State::Boot, Event::StartStateMachine) => State::Init,
@@ -42,6 +42,27 @@ impl StateMachine {
             // TMIN1 hierarchy (FirmwareUpdate)
             (State::FirmwareUpdate, Event::UpdateDone) => State::FirmwareVerify,
             (State::FirmwareUpdate, Event::UpdateFailed) => State::FirmwareVerify,
+
+            // TZERO entry from FirmwareVerify (already handled above)
+            // TZERO transitions to children
+            (State::Tzero, Event::VerifyDone) => State::Runtime,
+
+            // Runtime transitions
+            (State::Runtime, Event::ResetDetected) => State::FirmwareVerify,
+            (State::Runtime, Event::UpdateRequested) => State::FirmwareUpdate,
+            (State::Runtime, Event::WdtTimeout) => State::FirmwareRecovery,
+            (State::Runtime, Event::UpdateIntent2Requested) => State::SeamlessUpdate,
+            (State::Runtime, Event::AttestationFailed) => State::FirmwareRecovery,
+
+            // Seamless update transitions
+            (State::SeamlessUpdate, Event::SeamlessUpdateDone) => State::SeamlessVerify,
+            (State::SeamlessUpdate, Event::SeamlessUpdateFailed) => State::Runtime,
+            (State::SeamlessVerify, Event::SeamlessVerifyDone) => State::Runtime,
+            (State::SeamlessVerify, Event::SeamlessVerifyFailed) => State::Runtime,
+
+            // Unprovisioned transitions
+            (State::Unprovisioned, Event::ResetDetected) => State::FirmwareVerify,
+            (State::Unprovisioned, Event::ProvisionCmd) => State::Unprovisioned,
 
             // RotRecovery
             (State::RotRecovery, Event::RecoveryDone) => State::SystemReboot,

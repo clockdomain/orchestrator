@@ -81,4 +81,76 @@ mod tests {
         sm.handle_event(Event::UpdateDone, data);
         assert_eq!(sm.current_state(), State::FirmwareVerify);
     }
+
+    #[test]
+    fn test_firmware_verify_unprovisioned_goes_to_unprovisioned() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareVerify);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::VerifyUnprovisioned, data);
+        assert_eq!(sm.current_state(), State::Unprovisioned);
+    }
+
+    #[test]
+    fn test_firmware_verify_verify_done_goes_to_tzero() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::FirmwareVerify);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::VerifyDone, data);
+        assert_eq!(sm.current_state(), State::Tzero);
+    }
+
+    #[test]
+    fn test_runtime_reset_detected_goes_to_verify() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::Runtime);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::ResetDetected, data);
+        assert_eq!(sm.current_state(), State::FirmwareVerify);
+    }
+
+    #[test]
+    fn test_runtime_update_requested_goes_to_update() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::Runtime);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::UpdateRequested, data);
+        assert_eq!(sm.current_state(), State::FirmwareUpdate);
+    }
+
+    #[test]
+    fn test_runtime_wdt_timeout_goes_to_recovery() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::Runtime);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::WdtTimeout, data);
+        assert_eq!(sm.current_state(), State::FirmwareRecovery);
+    }
+
+    #[test]
+    fn test_unprovisioned_reset_detected_goes_to_verify() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::Unprovisioned);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::ResetDetected, data);
+        assert_eq!(sm.current_state(), State::FirmwareVerify);
+    }
+
+    #[test]
+    fn test_seamless_update_done_goes_to_seamless_verify() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::SeamlessUpdate);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::SeamlessUpdateDone, data);
+        assert_eq!(sm.current_state(), State::SeamlessVerify);
+    }
+
+    #[test]
+    fn test_seamless_verify_done_goes_to_runtime() {
+        let mut sm = StateMachine::new();
+        sm.set_state(State::SeamlessVerify);
+        let data = EventData::new([0, 0, 0, 0], 0);
+        sm.handle_event(Event::SeamlessVerifyDone, data);
+        assert_eq!(sm.current_state(), State::Runtime);
+    }
 }
